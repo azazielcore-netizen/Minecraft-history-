@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Minecraft — Дэлхийн Нууц Түүх</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=MedievalSharp&family=Cinzel:wght@400;700;900&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,400&display=swap');
+
+  :root {
+    --dirt: #5C3D1E;
+    --grass: #4A7C2F;
+    --stone: #7F7F7F;
+    --obsidian: #0D0D12;
+    --nether: #8B1A1A;
+    --end: #1A1A3E;
+    --gold: #FFD700;
+    --lapis: #1B4F9C;
+    --emerald: #00C060;
+    --soul: #4ECDC4;
+    --wither: #2D2D2D;
+    --cream: #F5E6C8;
+    --text: #E8D5A3;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--obsidian);
+    font-family: 'Crimson Pro', Georgia, serif;
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Pixel grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 32px 32px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative;
+    text-align: center;
+    padding: 80px 24px 60px;
+    background: linear-gradient(180deg, #0A0A0F 0%, #1a0a0a 50%, #0D0D12 100%);
+    border-bottom: 3px solid var(--grass);
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 60px;
+    background: repeating-linear-gradient(
+      90deg,
+      var(--grass) 0px, var(--grass) 32px,
+      #3A6020 32px, #3A6020 64px
+    );
+    opacity: 0.6;
+  }
+
+  .hero-eye {
+    font-size: 64px;
+    display: block;
+    margin-bottom: 16px;
+    filter: drop-shadow(0 0 20px var(--emerald));
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  .hero h1 {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(28px, 6vw, 56px);
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    color: var(--gold);
+    text-shadow: 0 0 40px rgba(255,215,0,0.4), 3px 3px 0 #6B4A00;
+    line-height: 1.1;
+    margin-bottom: 12px;
+  }
+
+  .hero-sub {
+    font-size: 16px;
+    color: #A89060;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  /* ── NAV TABS ── */
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    overflow-x: auto;
+    background: rgba(10,10,15,0.95);
+    backdrop-filter: blur(8px);
+    border-bottom: 2px solid #222;
+    scrollbar-width: none;
+  }
+  .nav::-webkit-scrollbar { display: none; }
+
+  .nav-btn {
+    flex: 0 0 auto;
+    padding: 14px 20px;
+    background: none;
+    border: none;
+    color: #666;
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    white-space: nowrap;
+    border-bottom: 3px solid transparent;
+    transition: all 0.25s;
+    position: relative;
+  }
+
+  .nav-btn:hover { color: var(--text); }
+
+  .nav-btn.active {
+    color: var(--gold);
+    border-bottom-color: var(--gold);
+  }
+
+  .nav-btn .nav-icon { margin-right: 6px; }
+
+  /* ── TIMELINE ── */
+  .timeline-wrap {
+    position: relative;
+    padding: 60px 0;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .timeline-line {
+    position: absolute;
+    left: 50%;
+    top: 0; bottom: 0;
+    width: 2px;
+    background: linear-gradient(180deg, transparent, var(--grass) 10%, var(--lapis) 40%, var(--nether) 70%, var(--end) 90%, transparent);
+    transform: translateX(-50%);
+  }
+
+  @media (max-width: 640px) {
+    .timeline-line { left: 28px; }
+  }
+
+  .era {
+    display: none;
+    padding: 0 24px;
+  }
+  .era.active { display: block; }
+
+  /* ── ERA CARD ── */
+  .era-header {
+    text-align: center;
+    padding: 40px 24px 32px;
+    position: relative;
+  }
+
+  .era-icon {
+    font-size: 56px;
+    display: block;
+    margin-bottom: 12px;
+  }
+
+  .era-title {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(22px, 4vw, 36px);
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .era-desc {
+    font-size: 16px;
+    color: #A08060;
+    max-width: 560px;
+    margin: 0 auto;
+    line-height: 1.6;
+    font-style: italic;
+  }
+
+  /* ── EVENT CARDS ── */
+  .events {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 0 16px 60px;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  .event-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 4px;
+    padding: 24px;
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    transition: background 0.2s, border-color 0.2s;
+    cursor: default;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .event-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+  }
+
+  .event-card:hover {
+    background: rgba(255,255,255,0.07);
+    border-color: rgba(255,255,255,0.15);
+  }
+
+  .event-emoji {
+    font-size: 32px;
+    flex: 0 0 40px;
+    text-align: center;
+    margin-top: 2px;
+  }
+
+  .event-body { flex: 1; }
+
+  .event-title {
+    font-family: 'Cinzel', serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--cream);
+    margin-bottom: 8px;
+    letter-spacing: 0.03em;
+  }
+
+  .event-text {
+    font-size: 15px;
+    line-height: 1.7;
+    color: #C8A878;
+  }
+
+  .event-tag {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 3px 10px;
+    border-radius: 2px;
+    font-size: 11px;
+    font-family: 'Cinzel', serif;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* Color themes per era */
+  .era-overworld .era-title { color: var(--grass); }
+  .era-overworld .event-card::before { background: var(--grass); }
+  .era-overworld .event-tag { background: rgba(74,124,47,0.3); color: var(--grass); border: 1px solid var(--grass); }
+
+  .era-tribe .era-title { color: var(--lapis); }
+  .era-tribe .event-card::before { background: var(--lapis); }
+  .era-tribe .event-tag { background: rgba(27,79,156,0.3); color: #6AABFF; border: 1px solid var(--lapis); }
+
+  .era-nether .era-title { color: #FF6B35; }
+  .era-nether .event-card::before { background: var(--nether); }
+  .era-nether .event-tag { background: rgba(139,26,26,0.3); color: #FF8060; border: 1px solid var(--nether); }
+
+  .era-wither .era-title { color: #A0A0A0; }
+  .era-wither .event-card::before { background: #555; }
+  .era-wither .event-tag { background: rgba(80,80,80,0.3); color: #CCC; border: 1px solid #555; }
+
+  .era-end .era-title { color: var(--soul); }
+  .era-end .event-card::before { background: var(--soul); }
+  .era-end .event-tag { background: rgba(78,205,196,0.2); color: var(--soul); border: 1px solid var(--soul); }
+
+  .era-endermen .era-title { color: #CC44FF; }
+  .era-endermen .event-card::before { background: #8822CC; }
+  .era-endermen .event-tag { background: rgba(136,34,204,0.3); color: #DD88FF; border: 1px solid #8822CC; }
+
+  .era-now .era-title { color: var(--gold); }
+  .era-now .event-card::before { background: var(--gold); }
+  .era-now .event-tag { background: rgba(255,215,0,0.15); color: var(--gold); border: 1px solid var(--gold); }
+
+  /* ── MORAL SECTION ── */
+  .moral {
+    margin: 0 16px 60px;
+    max-width: 720px;
+    margin-left: auto;
+    margin-right: auto;
+    background: linear-gradient(135deg, rgba(255,215,0,0.06), rgba(255,215,0,0.02));
+    border: 1px solid rgba(255,215,0,0.25);
+    border-radius: 4px;
+    padding: 32px;
+    text-align: center;
+  }
+
+  .moral-title {
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    letter-spacing: 0.2em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .moral-quote {
+    font-size: 20px;
+    font-style: italic;
+    line-height: 1.7;
+    color: var(--cream);
+  }
+
+  /* ── PARALLELS ── */
+  .parallels {
+    display: none;
+    padding: 40px 16px 60px;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  .parallels.active { display: block; }
+
+  .parallel-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-top: 32px;
+  }
+
+  .parallel-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 4px;
+    padding: 24px 20px;
+    text-align: center;
+  }
+
+  .parallel-card .p-icon { font-size: 40px; margin-bottom: 12px; display: block; }
+  .parallel-card .p-era { font-family: 'Cinzel', serif; font-size: 12px; color: var(--gold); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
+  .parallel-card .p-title { font-size: 16px; font-weight: 600; color: var(--cream); margin-bottom: 8px; }
+  .parallel-card .p-text { font-size: 13px; color: #A08060; line-height: 1.6; }
+
+  .section-label {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: #666;
+    text-transform: uppercase;
+    text-align: center;
+    margin-bottom: 8px;
+  }
+
+  .section-title {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(20px, 4vw, 28px);
+    color: var(--gold);
+    text-align: center;
+    margin-bottom: 12px;
+  }
+
+  .section-sub {
+    text-align: center;
+    color: #A08060;
+    font-style: italic;
+    margin-bottom: 32px;
+    font-size: 15px;
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <span class="hero-eye">⛏️</span>
+  <h1>MINECRAFT<br>ДЭЛХИЙН НУУЦ ТҮҮХ</h1>
+  <p class="hero-sub">Game Theory · 4 жилийн судалгаа · 35 онол</p>
+</div>
+
+<nav class="nav" id="mainNav">
+  <button class="nav-btn active" onclick="showEra('overworld')" id="btn-overworld">
+    <span class="nav-icon">🌍</span>ЭХЛЭЛ
+  </button>
+  <button class="nav-btn" onclick="showEra('tribe')" id="btn-tribe">
+    <span class="nav-icon">🏺</span>ОВГУУД
+  </button>
+  <button class="nav-btn" onclick="showEra('nether')" id="btn-nether">
+    <span class="nav-icon">🔥</span>НЕТЕР
+  </button>
+  <button class="nav-btn" onclick="showEra('wither')" id="btn-wither">
+    <span class="nav-icon">💀</span>WITHER
+  </button>
+  <button class="nav-btn" onclick="showEra('end')" id="btn-end">
+    <span class="nav-icon">🐉</span>THE END
+  </button>
+  <button class="nav-btn" onclick="showEra('endermen')" id="btn-endermen">
+    <span class="nav-icon">👁️</span>ЭНДЕРМЕН
+  </button>
+  <button class="nav-btn" onclick="showEra('now')" id="btn-now">
+    <span class="nav-icon">⚡</span>ӨНӨӨ ҮЕ
+  </button>
+  <button class="nav-btn" onclick="showEra('parallels')" id="btn-parallels">
+    <span class="nav-icon">🌐</span>ЕРТӨНЦИЙН ТОЛЬ
+  </button>
+</nav>
+
+<!-- ERA: OVERWORLD -->
+<div class="era era-overworld active" id="era-overworld">
+  <div class="era-header">
+    <span class="era-icon">🌍</span>
+    <div class="era-title">1-р Эри — Эхлэл & Hosts</div>
+    <p class="era-desc">Нетерийн гамшигаас эхлэн, бурхадын дуудлагаар анхны барилдагчид бий болно</p>
+  </div>
+  <div class="events">
+    <div class="event-card">
+      <div class="event-emoji">🧊</div>
+      <div class="event-body">
+        <div class="event-title">Нетер — Хүйтэн Орон</div>
+        <div class="event-text">Эртэнд Нетер нь халуун биш, хүйтэн мөстэй орон байв. Basalt delta нь blue ice болон soul soil-тай хамт үүссэн нотолгоо хадгалагдаж байна.</div>
+        <span class="event-tag">Нетерийн Эхлэл</span>
+      </div>
+    </div>
+    <div class="event-card">
+      <div class="event-emoji">🏭</div>
+      <div class="event-body">
+        <div class="event-title">Пиглинүүдийн Аж Үйлдвэржилт</div>
+        <div class="event-text">Пиглинүүд хэт их аж үйлдвэржиж, хүлэмжийн хий ялгаруулснаар Нетерийн мөс хайлж, амьдрах орчин сүйрэв. Нетер нь Overworld-оос 2.5 дахин жижиг учир гамшиг маш хурдан болов.</div>
+        <span class="event-tag">Байгалийн Гамшиг</span>
+      </div>
+    </div>
+    <div class="event-card">
+      <div class="event-emoji">⚔️</div>
+      <div class="event-body">
+        <div class="event-title">Пиглинүүдийн Довтолгоо</div>
+        <div class="event-text">Гэр оронгүй болсон пиглинүүд Overworld руу довтолж шинэ нутаг эрэлхийлэв. Энэ бол шунал биш — дүрвэгсдийн ашиггүй тулаан байв.</div>
+        <span class="event-tag">Дайн</span>
+      </div>
+    </div>
+    <div class="event-card">
+      <div class="event-emoji">✨</div>
+      <div class="event-body">
+        <div class="event-title">Гурван Бурхан (Hosts) Ирнэ</div>
+        <div class="event-text">Хүчирхэг гурван Hosts бурхан нэрийн болгосон барилдагчийг дуудаж — Banner of Courage, Flames of Creation гэрлэг зэвсэг өгч, пиглинүүдийг ялахад тусалжээ.</div>
+        <span class="event-tag">Бурхадын Хуралдаан</span>
+      </div>
+    </div>
+    <div class="event-card">
+      <div class="event-emoji">🏗️</div>
+      <div class="event-body">
+        <div class="event-title">Анхны Барилдагчид Байгуулагдана</div>
+        <div class="event-text">Hosts явсны дараа барилдагчид шинэ соёл иргэншил байгуулж эхэлнэ. Чоно гаршуулж, улаан буудай тариалан, амар тайван амьдрал эхэлнэ.</div>
+        <span class="event-tag">Соёл Иргэншил</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ERA: TRIBE -->
+<div class="era era-tribe" id="era-tribe">
+  <div class="era-header">
+    <span class="era-icon">🏺</span>
+    <div class="era-title">2-р Эри — Овог Аймгуудын Үе</div>
+    <p class="era-desc">Хурдтай өсөлт, хэт их ан агнуур, биомоор хуваагдсан овгуудын зөрчилдөөн</p>
+  </div>
+  <div class="events">
+    <div class="event-card">
+      <div class="event-emoji">🐅</div>
+      <div class="event-body">
+        <div class="event-title">Амьтад Устаж Эхэлнэ</div>
+        <div class="event-text">Хэт хурдтай өсч буй хүн амийн хэрэгцээ нийлүүлэхийн тулд болгоомжгүй ан агнуур хийснээр Regal Tiger болон Big Beak мэт зүйлүүд мөнхөд алга болов.</div>
+        <span class="event-tag">Зүйлийн Устал</span>
+      </div>
+    </div>
+    <div class="event-card">
+      <div class="event-emoji">🌊</div>
+      <div class="event-body">
+        <div class="event-title">Далайн Овог</div>
+        <div class="event-text">Загасчин, далайн дайчид болсон Далайн овог нь Ocean Monument барьж бурхдыг дуудахыг оролдов. Присмарин, алтаар бүрдсэн зиккурат хэлбэрийн байгууламж нь Hosts-ийн эргэн ирэлтэд зориулагдсан.</div>
+        <span class="event-tag">Далайн Овог</span>
+      </div>
+    </div>
+    <div class="event-card">
+      <div class="event-emoji">🏜️</div>
+      <div class="event-body">
+        <div class="event-title">Цөлийн Овог</div>
+        <div class="event-text">Цөлд амьдрагчид өөрсдийгөө хамгаалахын тулд TNT хавчуурт, creeper-тай холбоо тогтоов. Пиратуудын довтолгооноос хамгаалах хавчуур болсон temple бий болов.</div>
+        <span class="event-tag">Цөлийн Овог</span>
+      </div>
+    </div>
+    <div class="event-card">
+      <div class="event-emoji">🤖</div>
+      <div class="event-body">
+        <div class="event-title">Guardian — Усан Роботууд</div>
+        <div class="event-text">Пиратуудын довтолгооноос хамгаалахын тулд Далайн овог Guardian роботуудыг бүтээв. Гэвч эцсийн дүнд тэд ялагдаж, Drowned болж усан доор мандаж үлдэв.</div>
+        <span class="event-tag">Технологийн Зэвсэг</span>
+      </div>
+    </div>
+    <div class="event-card">
+      <div class="event-emoji">💎</div>
+      <div class="event-body">
+        <div class="event-title">Heart of the Sea — Эрэлхийлэл</div>
+        <div class="event-text">Пиратууд Далайн зүрхийг эрэлхийлж — nautilus shell-тэй хослуулбал усан амьсгалах чадвар өгнө. Энэхүү хайл нь овгуудын хоорондох дайны гол шалтгаан болов.</div>
+        <span class="event-tag">Хулгай & Дайн</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ERA: NETHER -->
+<div class="era era-nether" id="era-nether">
+  <div class="era-header">
+    <span class="era-icon">🔥</span>
+    <div class="era-title">3-р Эри — Нетерт Дайн</div>
+    <p class="era-desc">Үхлийг ялах зорилгоор Нетерт орж, харин өөрсдөө аймшигт дайснаа бий болголоо</p>
+  </div>
+  <div class="events">
+    <div class="event-card">
+      <div class="event-emoji">💙</div>
+      <div class="event-body">
+        <div class="event-title">Lapis Lazuli — Бурхдын Сүнс</div>
+        <div class="event-text">Барилдагчид lapis lazuli нь бурхад болон гайхалтай амьтдын сүнсийг агуулдаг гэж итгэв. Spawner-ийг lapis-аар тэжээвэл амьдралыг шинээр бий болгоно гэж найдав.</div>
+        <span class="event-tag">Шидэт Туршилт</span>
+      </div>
+    </div>
+    <div class="event-card">
+      <div class="event-emoji">⚔️</div>
+      <div class="event-body">
+        <div class="event-title">Пиглинүүдтэй Дахин Дайн</div>
+        <div class="event-text">Lapis олох гэж Нетерт орж пиглинүүдтэй тулалдав. Нетер Fortress барьж алт, арьс, алмаз нөөцлөв. Харин пиглиний сүнснүүд lapis биш — soul sand болж газарт шингэв.</div>
+        <span class="event-tag">Санамсаргүй Алдаа</span>
+      </div>
+    </div>
+    <div class="event-card">
+      <div class="event-emoji">🦴</div>
+      <div class="event-body">
+        <div class="event-title">Wither Skeleton Үүснэ</div>
+        <div class="event-text">Soul sand-д шингэсэн пиглиний сүнснүүд Wither Skeleton болж хувирав. Барилдагчид мэдэлгүйгээр Нетерыг хамаагүй аюултай болгосон байна.</div>
+        <span class="event-tag">Шинэ Аюул</span>
+      </div>
+    </div>
+    <div class="event-card">
+      <div class="event-emoji">🧪</div>
+      <div class="event-body">
+        <div class="event-title">Шидэт Ундааны Нээлт</div>
+        <div class="event-text">Overworld руу буцахдаа Blaze rod, Nether wart, Ghast tear авч ирэв. Эдгээрээр хурд, галын тэсвэр, нөхөн сэргэлтийн шидэт ундаа бүтээв. Гэвч үхлийг ялах боломж олдсонгүй.</div>
+        <span class="event-tag">Шидэт Ундаа</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ERA: WITHER -->
+<div class="era era-wither" id="era-wither">
+  <div class="era-header">
+    <span class="era-icon">💀</span>
+    <div class="era-title">4-р Эри — Wither & Эртний Хот</div>
+    <p class="era-desc">Үхлийг ялах гэж бүтээсэн зүйл нь тэднийг устгах аюул болов</p>
+  </div>
+  <div class="events">
+    <div class="event-card">
+      <div class="event-emoji">💀</div>
+      <div class="event-body">
+        <div class="event-title">Wither Бүтээгдэнэ</div>
+        <div class="event-text">Soul sand + Wither skull = Wither. Барилдагчид амьдралыг нөхөн сэргээх чадвартай дарга бий болгосон гэж бодов. Улаан элсэн чулуун сийлбэрүүд энэ шүтлэгийг харуулдаг.</div>
+        <span class="event-tag">Аймшигт Алдаа</span>
+      </div>
+    </div>
+    <div class="event-card">
+      <div class="event-emoji">💥</div>
+      <div class="event-body">
+        <div class="event-title">Wither Хяналтаас Гарна</div>
+        <div class="event-text">Wither хяналтаас гарч суурин бүрийг устгаж эхлэв. Барилдагчид газар доорхи нуугдмал хотод — Ancient City-д дүрвэх шаардлагатай болов.</div>
+        <span class="event-tag">Дүрвэлт</span>
+      </div>
+    </div>
+    <div class="event-card">
+      <div class="event-emoji">🏙️</div>
+      <div class="event-body">
+        <div class="event-title">Ancient City — Газрын Гүний Нуугдах Газар</div>
+        <div class="event-text">Барилдагчид soul lantern, soul torch-оор гэрэлтэй хот байгуулав. Music disc 5 тэдний сүүлчийн тэмдэглэлт мөч — дараа нь Wither ирэв.</div>
+        <span class="event-tag">Сүүлчийн Хот</span>
+      </div>
+    </div>
+    <div class="event-card">
+      <div class="event-emoji">👁️</div>
+      <div class="event-body">
+        <div class="event-title">Portal Нээж — WARDEN Гарч Ирнэ</div>
+        <div class="event-text">Нутгийг аврах гэж portal нээсэн боловч оронд нь Warden гарч ирэв — сохор, дуу сонсдог, сүнс шингэсэн цээжтэй аймшигт биет. Wither vs Warden тулаан болж, хоёулаа хохирол учруулав.</div>
+        <span class="event-tag">Хамгийн Том Аюул</span>
+      </div>
+    </div>
+    <div class="event-card">
+      <div class="event-emoji">🏰</div>
+      <div class="event-body">
+        <div class="event-title">Stronghold Барьж — End Portal Нээнэ</div>
+        <div class="event-text">Warden-ийн дуу мэдрэмжийг тойрон carpet, wool тавьж оролдов. Бүтэлгүйтсэний эцэст Stronghold барьж, End Portal идэвхжүүлж, шинэ орон нутаг хайна.</div>
+        <span class="event-tag">Сүүлчийн Найдвар</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ERA: THE END -->
+<div class="era era-end" id="era-end">
+  <div class="era-header">
+    <span class="era-icon">🐉</span>
+    <div class="era-title">5-р Эри — The End</div>
+    <p class="era-desc">Шинэ дэлхийд шинэ соёл иргэншил — гэвч эртний алдаа давтагдана</p>
+  </div>
+  <div class="events">
+    <div class="event-card">
+      <div class="event-emoji">🏯</div>
+      <div class="event-body">
+        <div class="event-title">The End-д Суурьшина</div>
+        <div class="event-text">Барилдагчид The End-д цайз, агуулах байгуулж хамгийн дэвшилтэт зэвсэг хэрэгсэл хадгалав. End ship дээрх олон луугийн толгой нь энэ зүйл хэзээ нэгэн цагт маш элбэг байсныг харуулна.</div>
+        <span class="event-tag">Шинэ Суурин</span>
+      </div>
+    </div>
+    <div class="event-card">
+      <div class="event-emoji">🦋</div>
+      <div class="event-body">
+        <div class="event-title">Elytra — Луугийн Далавч</div>
+        <div class="event-text">Ender Dragon ан агнаж далавчнаас elytra бүтээв. Нисэх чадвар нь том амжилт байсан ч энэ ан агнуур луугийн зүйлийг бараг устгав. Overworld-ийн амьтад устгасантай адил алдаа давтагдав.</div>
+        <span class="event-tag">Давтагдсан Алдаа</span>
+      </div>
+    </div>
+    <div class="event-card">
+      <div class="event-emoji">🔮</div>
+      <div class="event-body">
+        <div class="event-title">Сүүлчийн Лууг Хадгална</div>
+        <div class="event-text">Өөрсдийн алдааг ухаарч, барилдагчид end crystal ашиглан сүүлчийн Ender Dragon-г тасралтгүй нөхөн сэргээж байв — зүйлийг хадгалах сүүлчийн оролдлого.</div>
+        <span class="event-tag">Нөхөн Сэргээлт</span>
+      </div>
+    </div>
+    <div class="event-card">
+      <div class="event-emoji">🍇</div>
+      <div class="event-body">
+        <div class="event-title">Chorus Fruit — Цорын Ганц Хоол</div>
+        <div class="event-text">The End-д ургамлын хомсдол ихтэй — chorus fruit л цорын ганц хоол болов. Энэ жимсний телепортаци шинж чанар барилдагчдын биед аажмаар нөлөөлж эхэлнэ...</div>
+        <span class="event-tag">Хувьсал Эхэлнэ</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ERA: ENDERMEN -->
+<div class="era era-endermen" id="era-endermen">
+  <div class="era-header">
+    <span class="era-icon">👁️</span>
+    <div class="era-title">6-р Эри — Эндермен & Уналт</div>
+    <p class="era-desc">Барилдагчид хувьсаж, Overworld-д эргэж, Illers-тэй нийлэн шинэ аймшиг бүтээнэ</p>
+  </div>
+  <div class="events">
+    <div class="event-card">
+      <div class="event-emoji">🧬</div>
+      <div class="event-body">
+        <div class="event-title">Барилдагчид ЭНДЕРМЕН Болно</div>
+        <div class="event-text">Chorus fruit-ийн телепортаци шинж чанар удаан хугацааны турш барилдагчдын биед хуримтлагдаж, тэд аажмаар Endermen болж хувирав. Телепортаци чадвар нэмэгдсэн ч барилах чадвар буурав.</div>
+        <span class="event-tag">Биологийн Хувьсал</span>
+      </div>
+    </div>
+    <div class="event-card">
+      <div class="event-emoji">🔄</div>
+      <div class="event-body">
+        <div class="event-title">Illers-тэй Нийлнэ</div>
+        <div class="event-text">Overworld руу буцсан зарим барилдагчид Illers — хорлонт тосгончидтой нийлэв. Тэд elytra, portal технологийг хуваалцав. Illers бүрэн ойлгоогүй байсан ч бүх зүйлийг хуулбарлахыг оролдов.</div>
+        <span class="event-tag">Мэдлэг Дамжуулах</span>
+      </div>
+    </div>
+    <div class="event-card">
+      <div class="event-emoji">🐑</div>
+      <div class="event-body">
+        <div class="event-title">Cargo Cult — Ноосон Хуулбар</div>
+        <div class="event-text">Illers ноосоор орон, газрын зураг, portal-ийн хуулбар бүтээв — ажиллахгүй ч гэсэн. Ойлгохгүй байж хуулбарлах — карго соёлын хэлбэр.</div>
+        <span class="event-tag">Хуурамч Шүтлэг</span>
+      </div>
+    </div>
+    <div class="event-card">
+      <div class="event-emoji">🧪</div>
+      <div class="event-body">
+        <div class="event-title">Аймшигт Туршилтууд</div>
+        <div class="event-text">Lapis-ийг тосгончдын тархинд тарьж Vindicator, Ravager үүсгэв. Vex, Phantom бүтээв. Шинэ "Steve" хүн хийхийг оролдов — гэвч туршилт бүтэлгүйтэж ZOMBIE үүсгэв.</div>
+        <span class="event-tag">Бүтэлгүй Туршилт</span>
+      </div>
+    </div>
+    <div class="event-card">
+      <div class="event-emoji">🌑</div>
+      <div class="event-body">
+        <div class="event-title">Соёл Иргэншлийн Уналт</div>
+        <div class="event-text">Дэлхий нь сүйрч, байгаль аажмаар эртний барилга байгууламжуудыг нөмрөв. Ancient structure-ууд газрын гүнд нуугдав. Гэвч дэлхий аажмаар сэргэж байна...</div>
+        <span class="event-tag">Уналт</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ERA: NOW -->
+<div class="era era-now" id="era-now">
+  <div class="era-header">
+    <span class="era-icon">⚡</span>
+    <div class="era-title">Өнөө Үе — Таны Үе</div>
+    <p class="era-desc">Тоглогч та бол шинэ барилдагч — гэвч эртний мөчлөг давтагдаж байна уу?</p>
+  </div>
+  <div class="events">
+    <div class="event-card">
+      <div class="event-emoji">🪓</div>
+      <div class="event-body">
+        <div class="event-title">Мод Огтолж, Нөөц Олборлоно</div>
+        <div class="event-text">Шинэ тоглогч дэлхийд ирж мод огтолж, чулуу олборлож, металл уурхайлна. Яг л эртний барилдагчид эхэлсэнтэй адил...</div>
+        <span class="event-tag">Давтагдах Эхлэл</span>
+      </div>
+    </div>
+    <div class="event-card">
+      <div class="event-emoji">⚠️</div>
+      <div class="event-body">
+        <div class="event-title">Амьтдыг Алж, Биом Устгана</div>
+        <div class="event-text">Хоол хийхийн тулд амьтад алж, газар тариалан болгох гэж ой устгана. Энэ мөчлөг Regal Tiger устгасан эртний барилдагчдынхтай яг адилхан.</div>
+        <span class="event-tag">Давтагдах Алдаа</span>
+      </div>
+    </div>
+    <div class="event-card">
+      <div class="event-emoji">❓</div>
+      <div class="event-body">
+        <div class="event-title">Та Ялах Уу?</div>
+        <div class="event-text">Эртний барилдагчид Endermen болж, дэлхийг сүйтгэж устав. Та тэдний алдааг мэдэж байна. Өөр замаар явах боломж таны гарт байна — уу?</div>
+        <span class="event-tag">Таны Сонголт</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="moral">
+    <div class="moral-title">⚖️ Game Theory-н Сургамж</div>
+    <p class="moral-quote">"Minecraft болон амьдралд баатар эсвэл муу тоглогч гэдэг нь таны сонголтоос хамаарна.<br><br>Шунал, овог дарах зорилго — эдгээр мөчлөгийг таних нь цорын ганц аврагч зам."</p>
+  </div>
+</div>
+
+<!-- PARALLELS -->
+<div class="parallels" id="era-parallels">
+  <div class="section-label">Ертөнцийн Толь</div>
+  <div class="section-title">Minecraft ≈ Бодит Дэлхий</div>
+  <p class="section-sub">Minecraft-ийн түүх бол хүн төрөлхтний түүхийн тусгал</p>
+
+  <div class="parallel-grid">
+    <div class="parallel-card">
+      <span class="p-icon">⛵</span>
+      <div class="p-era">8-р зуун</div>
+      <div class="p-title">Викингүүд</div>
+      <div class="p-text">Мод хэт огтолж ой устгасны улмаас хоол хомсдолд орж шинэ газар нутаг эрэлхийлэв. Пиглинүүдтэй адил.</div>
+    </div>
+    <div class="parallel-card">
+      <span class="p-icon">⚓</span>
+      <div class="p-era">15–19-р зуун</div>
+      <div class="p-title">Европын Колоничлол</div>
+      <div class="p-text">Америк тивийн элбэг нөөцийг хайр найргүй олборлов. Эртний барилдагчдын Nether fortress-тэй адил.</div>
+    </div>
+    <div class="parallel-card">
+      <span class="p-icon">🏭</span>
+      <div class="p-era">Өнөө үе</div>
+      <div class="p-title">Аж Үйлдвэрийн Эрин</div>
+      <div class="p-text">Ой устгал, хүлэмжийн хий, нөөц барагдуулах. Яг л Нетерийн пиглинүүдийн алдаа давтагдаж байна.</div>
+    </div>
+    <div class="parallel-card">
+      <span class="p-icon">🏺</span>
+      <div class="p-era">Minecraft</div>
+      <div class="p-title">Эртний Барилдагчид</div>
+      <div class="p-text">Амьтад устгаж, нөөц барагдуулж, шинэ газар хайж, эцэстээ өөрсдөө өөр зүйл болж хувирав.</div>
+    </div>
+    <div class="parallel-card">
+      <span class="p-icon">🌍</span>
+      <div class="p-era">Бүх Цаг Үе</div>
+      <div class="p-title">Мөчлөг</div>
+      <div class="p-text">Шунал → Нөөц барагдал → Дайн → Уналт → Шинэ эхлэл. Энэ мөчлөг хэзээ төгсөх вэ?</div>
+    </div>
+    <div class="parallel-card">
+      <span class="p-icon">💡</span>
+      <div class="p-era">Ирээдүй</div>
+      <div class="p-title">Таны Сонголт</div>
+      <div class="p-text">Мөчлөгийг мэдвэл өөрчлөх боломжтой. Minecraft дэлхий аажмаар сэргэж байна — бодит дэлхий мөн сэргэж чадна.</div>
+    </div>
+  </div>
+
+  <div class="moral" style="margin-top: 40px;">
+    <div class="moral-title">🎮 Game Theory-н Эцсийн Үг</div>
+    <p class="moral-quote">"Энэ нь зүгээр нэг тоглоом биш — энэ нь бидний дэлхийтэй харьцах харьцааны толь юм.<br><br>Нүцгэн үнэн: хязгааргүй олборлолт дэлхийг устгана."</p>
+  </div>
+</div>
+
+<script>
+  function showEra(id) {
+    // Hide all eras
+    document.querySelectorAll('.era, .parallels').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+
+    // Show selected
+    const target = document.getElementById('era-' + id);
+    if (target) target.classList.add('active');
+    const btn = document.getElementById('btn-' + id);
+    if (btn) btn.classList.add('active');
+
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+</body>
+</html>
